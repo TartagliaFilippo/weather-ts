@@ -1,3 +1,5 @@
+import { GeocodedLocation } from "./interfaces/geocoding.interface";
+
 class Weather {
   private static instance: Weather;
   private weatherEndPoint: string =
@@ -18,4 +20,14 @@ class Weather {
 
     return Weather.instance;
   }
+
+  async getLocations(query: string): Promise<GeocodedLocation[]> {
+    const response = await fetch(
+      `${this.geocodingEndPoint}?q=${query}&limit=5&appid=${this.apiKey}&lang=${this.settings.lang}`
+    );
+    const data: GeocodedLocation[] = await response.json();
+    return data;
+  }
 }
+
+export default Weather;
