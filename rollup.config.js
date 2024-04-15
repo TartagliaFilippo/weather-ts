@@ -4,7 +4,7 @@ export default {
   input: "src/app.ts",
   output: {
     file: "dist/main.js",
-    format: "life",
+    format: "iife",
     sourcemap: true,
   },
   plugins: [typescript()],
