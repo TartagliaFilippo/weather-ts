@@ -14,6 +14,14 @@ if (citySearchForm) {
     const city = cityInput.value;
     const weather = Weather.getInstance();
     const locations = await weather.getLocations(city);
-    console.log(locations);
+
+    searchResults.innerHTML = "";
+
+    if (!locations.length) {
+      const li = document.createElement("li");
+      li.textContent = "Nessun risultato trovato";
+      searchResults.appendChild(li);
+      return;
+    }
   });
 }
