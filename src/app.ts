@@ -23,5 +23,17 @@ if (citySearchForm) {
       searchResults.appendChild(li);
       return;
     }
+
+    locations.forEach((location: any) => {
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      button.textContent = `${location.name}, ${location.state}, ${location.country}`;
+      button.addEventListener("click", async () => {
+        searchResults.innerHTML = "";
+        // TODO: fetch weather
+        li.appendChild(button);
+        searchResults.appendChild(li);
+      });
+    });
   });
 }

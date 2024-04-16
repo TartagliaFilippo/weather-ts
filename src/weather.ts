@@ -1,3 +1,4 @@
+import { CurrentWeather } from "./interfaces/currentWeather.inteface";
 import { GeocodedLocation } from "./interfaces/geocoding.interface";
 
 class Weather {
@@ -26,6 +27,14 @@ class Weather {
       `${this.geocodingEndPoint}?q=${query}&limit=5&appid=${this.apiKey}&lang=${this.settings.lang}`
     );
     const data: GeocodedLocation[] = await response.json();
+    return data;
+  }
+
+  async getCurrentWeather(lat: number, lon: number): Promise<CurrentWeather> {
+    const response = await fetch(
+      `${this.weatherEndPoint}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=${this.settings.units}&lang=${this.settings.lang}`
+    );
+    const data: CurrentWeather = await response.json();
     return data;
   }
 }
