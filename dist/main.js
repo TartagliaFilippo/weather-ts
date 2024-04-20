@@ -65,9 +65,9 @@
         function Weather() {
             this.weatherEndPoint = "https://api.openweathermap.org/data/2.5/weather";
             this.geocodingEndPoint = "http://api.openweathermap.org/geo/1.0/direct";
-            this.forecastEndPoint = "https://pro.openweathermap.org/data/2.5/forecast";
+            this.forecastEndPoint = "https://api.openweathermap.org/data/2.5/forecast";
             this.settings = { units: "metric", lang: "it" };
-            this.apiKey = "a66a66c6b64256d23f1bed26655002d2";
+            this.apiKey = "f0c6165f24ca3c821fabdd01ea5ddd22";
         }
         Weather.getInstance = function () {
             if (!Weather.instance) {
@@ -91,29 +91,131 @@
                 });
             });
         };
+        Weather.prototype.getCurrentWeather = function (lat, lon) {
+            return __awaiter(this, void 0, void 0, function () {
+                var response, data;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, fetch("".concat(this.weatherEndPoint, "?lat=").concat(lat, "&lon=").concat(lon, "&appid=").concat(this.apiKey, "&units=").concat(this.settings.units, "&lang=").concat(this.settings.lang))];
+                        case 1:
+                            response = _a.sent();
+                            return [4 /*yield*/, response.json()];
+                        case 2:
+                            data = _a.sent();
+                            return [2 /*return*/, data];
+                    }
+                });
+            });
+        };
+        Weather.prototype.getForecast = function (lat, lon) {
+            return __awaiter(this, void 0, void 0, function () {
+                var response, data;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, fetch("".concat(this.forecastEndPoint, "?lat=").concat(lat, "&lon=").concat(lon, "&appid=").concat(this.apiKey, "&units=").concat(this.settings.units, "&lang=").concat(this.settings.lang))];
+                        case 1:
+                            response = _a.sent();
+                            return [4 /*yield*/, response.json()];
+                        case 2:
+                            data = _a.sent();
+                            data.list = this.filterForecast(data.list);
+                            return [2 /*return*/, data];
+                    }
+                });
+            });
+        };
+        Weather.prototype.filterForecast = function (forecast) {
+            var foundDays = [];
+            var filteredForecast = [];
+            forecast.forEach(function (forecastWeather) {
+                var date = forecastWeather.dt_txt.split(" ")[0];
+                if (foundDays.indexOf(date) === -1) {
+                    foundDays.push(date);
+                    filteredForecast.push(forecastWeather);
+                }
+                else {
+                    return;
+                }
+            });
+            return filteredForecast;
+        };
         return Weather;
     }());
 
     var citySearchForm = document.querySelector(".city-search-form");
     if (citySearchForm) {
         citySearchForm.addEventListener("submit", function (e) { return __awaiter(void 0, void 0, void 0, function () {
-            var cityInput, city, weather, locations;
+            var cityInput, searchResults, city, weather, locations, li;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         e.preventDefault();
                         cityInput = citySearchForm.querySelector(".city");
-                        citySearchForm.querySelector("search-results");
+                        searchResults = citySearchForm.querySelector(".search-results");
                         city = cityInput.value;
                         weather = Weather.getInstance();
                         return [4 /*yield*/, weather.getLocations(city)];
                     case 1:
                         locations = _a.sent();
-                        console.log(locations);
+                        searchResults.innerHTML = "";
+                        if (!locations.length) {
+                            li = document.createElement("li");
+                            li.textContent = "Nessun risultato trovato";
+                            searchResults.appendChild(li);
+                            return [2 /*return*/];
+                        }
+                        locations.forEach(function (location) {
+                            var li = document.createElement("li");
+                            var button = document.createElement("button");
+                            button.textContent = "".concat(location.name, ", ").concat(location.state, ", ").concat(location.country);
+                            button.addEventListener("click", function () { return __awaiter(void 0, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    searchResults.innerHTML = "";
+                                    Promise.all([
+                                        weather.getCurrentWeather(location.lat, location.lon),
+                                        weather.getForecast(location.lat, location.lon),
+                                    ]).then(function (_a) {
+                                        var currentWeather = _a[0], forecast = _a[1];
+                                        showWeatherData(currentWeather, forecast);
+                                    });
+                                    return [2 /*return*/];
+                                });
+                            }); });
+                            li.appendChild(button);
+                            searchResults.appendChild(li);
+                        });
                         return [2 /*return*/];
                 }
             });
         }); });
+    }
+    function showWeatherData(currentWeather, forecast) {
+        var weatherMain = document.querySelector(".weather-main");
+        var weatherLocation = document.querySelector(".weather-location");
+        var weatherTemperature = document.querySelector(".weather-temperature");
+        var weatherStats = document.querySelector(".weather-stats");
+        var weatherDaily = document.querySelector(".weather-daily ul");
+        weatherStats.className = "weather-stats";
+        weatherStats.classList.add(currentWeather.weather[0].main.toLocaleLowerCase());
+        weatherMain.textContent = currentWeather.weather[0].description;
+        weatherLocation.textContent = currentWeather.name;
+        weatherTemperature.textContent = "".concat(currentWeather.main.temp.toFixed(1), "\u00B0C");
+        weatherDaily.innerHTML = "";
+        var forecastElements = createWeatherDay(forecast);
+        forecastElements.forEach(function (element) {
+            weatherDaily.appendChild(element);
+        });
+    }
+    function createWeatherDay(forecast) {
+        var forecastMap = forecast.list.map(function (forecastWeather) {
+            var li = document.createElement("li");
+            var day = new Date(forecastWeather.dt * 1000);
+            li.innerHTML = "\n    <span class=\"day\">".concat(day.toLocaleDateString("it-IT", {
+                weekday: "long",
+            }), "</span>\n    <span class=\"stats\">\n      <span>").concat(forecastWeather.main.temp.toFixed(1), "\u00B0C</span>\n      <span>").concat(forecastWeather.weather[0].description, "</span>\n    </span>\n    ");
+            return li;
+        });
+        return forecastMap;
     }
 
 })();
