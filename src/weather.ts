@@ -1,5 +1,5 @@
 import { CurrentWeather } from "./interfaces/currentWeather.inteface";
-import { Forecast } from "./interfaces/forecast.interface";
+import { Forecast, ForecastWeather } from "./interfaces/forecast.interface";
 import { GeocodedLocation } from "./interfaces/geocoding.interface";
 
 class Weather {
@@ -9,9 +9,9 @@ class Weather {
   private geocodingEndPoint: string =
     "http://api.openweathermap.org/geo/1.0/direct";
   private forecastEndPoint: string =
-    "https://pro.openweathermap.org/data/2.5/forecast";
+    "https://api.openweathermap.org/data/2.5/forecast";
   private settings: { [key: string]: string } = { units: "metric", lang: "it" };
-  private apiKey: string = "a66a66c6b64256d23f1bed26655002d2";
+  private apiKey: string = "f0c6165f24ca3c821fabdd01ea5ddd22";
 
   constructor() {}
 
@@ -41,10 +41,27 @@ class Weather {
 
   async getForecast(lat: number, lon: number): Promise<Forecast> {
     const response = await fetch(
-      `${this.forecastEndPoint}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=${this.settings.units}&lang=${this.settings.lang}&cnt=5`
+      `${this.forecastEndPoint}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=${this.settings.units}&lang=${this.settings.lang}`
     );
-    const data: Forecast = await response.json();
+    let data: Forecast = await response.json();
+    data.list = this.filterForecast(data.list);
     return data;
+  }
+
+  private filterForecast(forecast: ForecastWeather[]): ForecastWeather[] {
+    const foundDays: string[] = [];
+    const filteredForecast: ForecastWeather[] = [];
+    forecast.forEach((forecastWeather: ForecastWeather) => {
+      const date = forecastWeather.dt_txt.split(" ")[0];
+      if (foundDays.indexOf(date) === -1) {
+        foundDays.push(date);
+        filteredForecast.push(forecastWeather);
+      } else {
+        return;
+      }
+    });
+
+    return filteredForecast;
   }
 }
 
